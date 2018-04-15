@@ -13,8 +13,8 @@ def draw_boxes(img, bboxes, color=(0, 0, 255), thick=6):
 
 
 def subsampling_window_search(img, svc, X_scaler, y_start, y_stop, x_start, x_stop, scale=1.0,
-                              orient=12, pix_per_cell=8, cell_per_block=2,
-                              spatial_size=(16, 16), n_bins=56, debug=False):
+                              orient=9, pix_per_cell=8, cell_per_block=2,
+                              spatial_size=(16, 16), n_bins=16, debug=False):
     rectangles = []
     img = img.astype(np.float32)  # / 255
 
@@ -28,6 +28,8 @@ def subsampling_window_search(img, svc, X_scaler, y_start, y_stop, x_start, x_st
         hsv_s_image = cv2.resize(hsv_s_image, (np.int(imshape[1] / scale), np.int(imshape[0] / scale)))
 
     img_c1 = ycrcb_s_image[:, :, 0]
+    img_c2 = hsv_s_image[:, :, 1]
+    img_c3 = hsv_s_image[:, :, 2]
 
     # Define blocks and steps as above
     nx_blocks = (img_c1.shape[1] // pix_per_cell) - cell_per_block + 1
@@ -42,6 +44,10 @@ def subsampling_window_search(img, svc, X_scaler, y_start, y_stop, x_start, x_st
 
     hog_c1 = image_hog(img_c1, orient=orient, pix_per_cell=pix_per_cell, cell_per_block=cell_per_block,
                        feature_vec=False, vis=False)
+    hog_c2 = image_hog(img_c2, orient=orient, pix_per_cell=pix_per_cell, cell_per_block=cell_per_block,
+                       feature_vec=False, vis=False)
+    hog_c3 = image_hog(img_c3, orient=orient, pix_per_cell=pix_per_cell, cell_per_block=cell_per_block,
+                       feature_vec=False, vis=False)
 
     for xb in range(nx_steps):
         for yb in range(ny_steps):
@@ -52,6 +58,8 @@ def subsampling_window_search(img, svc, X_scaler, y_start, y_stop, x_start, x_st
             y_top = y_pos * pix_per_cell
 
             features_hog_c1 = hog_c1[y_pos:y_pos + nblocks_per_window, x_pos:x_pos + nblocks_per_window].ravel()
+            features_hog_c2 = hog_c2[y_pos:y_pos + nblocks_per_window, x_pos:x_pos + nblocks_per_window].ravel()
+            features_hog_c3 = hog_c3[y_pos:y_pos + nblocks_per_window, x_pos:x_pos + nblocks_per_window].ravel()
 
             subimg_ycrcb = cv2.resize(ycrcb_s_image[y_top:y_top + window, x_left:x_left + window], (64, 64))
             subimg_hsv = cv2.resize(hsv_s_image[y_top:y_top + window, x_left:x_left + window], (64, 64))
@@ -70,6 +78,8 @@ def subsampling_window_search(img, svc, X_scaler, y_start, y_stop, x_start, x_st
 
             test_features = X_scaler.transform(np.hstack((
                 features_hog_c1,
+                features_hog_c2,
+                features_hog_c3,
                 features_spatial_1,
                 features_spatial_2,
                 features_spatial_3,

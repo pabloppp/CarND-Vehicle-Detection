@@ -3,11 +3,11 @@ from moviepy.editor import VideoFileClip, CompositeVideoClip
 
 from src.tools.video_processor import VideoProcessor
 
-model = pickle.load(open("svc.p", "rb"))
+model = pickle.load(open("svc_2.p", "rb"))
 svc = model["svc"]
 X_scaler = model["scaler"]
 
-clip = VideoFileClip("../project_video.mp4").subclip(0, 3)
+clip = VideoFileClip("../test_video.mp4")  # .subclip(0, 3)
 videoProcessor = VideoProcessor(svc, X_scaler)
 
 heatmap = clip.fl_image(videoProcessor.heatmap)

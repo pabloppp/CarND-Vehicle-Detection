@@ -17,7 +17,7 @@ class VideoProcessor:
         rects_1, rects_2, rects_3, rects = combined_window_search(image, self.svc, self.scaler)
 
         heatmap = generate_heatmap(rects)
-        heatmap[heatmap <= 10] = 0
+        heatmap[heatmap <= 4] = 0
 
         # print(heatmap.shape)
         self.latest_heatmap = heatmap

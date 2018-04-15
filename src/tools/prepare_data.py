@@ -40,11 +40,11 @@ def color_hist(img, nbins=32, bins_range=(0, 256)):
 
 
 def combined_features(img):
-    orient = 12
+    orient = 9  # 12
     pix_per_cell = 8
     cell_per_block = 2
     spatial_size = (16, 16)
-    n_bins = 56
+    n_bins = 16
 
     img_hsv = cv2.cvtColor(img, cv2.COLOR_RGB2HSV)
     img_ycrcb = cv2.cvtColor(img, cv2.COLOR_RGB2YCrCb)
@@ -54,8 +54,10 @@ def combined_features(img):
 
     features_hog_c1 = image_hog(img_c1, orient=orient, pix_per_cell=pix_per_cell, cell_per_block=cell_per_block,
                                 vis=False)
-    # features_hog_c2, vis_c2 = image_hog(img_c2, orient=orient, pix_per_cell=pix_per_cell, cell_per_block=cell_per_block)
-    # features_hog_c3, vis_c3 = image_hog(img_c3, orient=orient, pix_per_cell=pix_per_cell, cell_per_block=cell_per_block)
+    features_hog_c2 = image_hog(img_c2, orient=orient, pix_per_cell=pix_per_cell, cell_per_block=cell_per_block,
+                                vis=False)
+    features_hog_c3 = image_hog(img_c3, orient=orient, pix_per_cell=pix_per_cell, cell_per_block=cell_per_block,
+                                vis=False)
 
     features_spatial_1 = image_bin_spatial(img_c1, size=spatial_size)
     features_spatial_2 = image_bin_spatial(img_c2, size=spatial_size)
@@ -67,8 +69,8 @@ def combined_features(img):
 
     return np.concatenate((
         features_hog_c1,
-        # features_hog_c2,
-        # features_hog_c3,
+        features_hog_c2,
+        features_hog_c3,
         features_spatial_1,
         features_spatial_2,
         features_spatial_3,
