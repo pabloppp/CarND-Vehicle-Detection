@@ -9,7 +9,6 @@ def load_images(path):
     images = []
     for image_path in glob.glob(path, recursive=True):
         image = cv2.imread(image_path)
-        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         images.append(image)
     return images
 
@@ -29,7 +28,10 @@ def image_bin_spatial(image, size=(32, 32)):
 
 
 def color_hist(img, nbins=32, bins_range=(0, 256)):
-    c_hist = np.histogram(img, bins=nbins, range=bins_range)
+    c1_hist = np.histogram(img[:, :, 0], bins=nbins, range=bins_range)
+    c2_hist = np.histogram(img[:, :, 1], bins=nbins, range=bins_range)
+    c3_hist = np.histogram(img[:, :, 2], bins=nbins, range=bins_range)
+    c_hist = np.vstack((c1_hist[0], c2_hist[0], c3_hist[0]))
     # Generating bin centers
     bin_edges = c_hist[1]
     bin_centers = (bin_edges[1:] + bin_edges[:-1]) / 2
@@ -40,41 +42,33 @@ def color_hist(img, nbins=32, bins_range=(0, 256)):
 
 
 def combined_features(img):
-    orient = 9  # 12
+    orient = 9
     pix_per_cell = 8
     cell_per_block = 2
     spatial_size = (16, 16)
-    n_bins = 16
+    n_bins = 32
 
-    img_hsv = cv2.cvtColor(img, cv2.COLOR_RGB2HSV)
-    img_ycrcb = cv2.cvtColor(img, cv2.COLOR_RGB2YCrCb)
+    img_ycrcb = cv2.cvtColor(img, cv2.COLOR_BGR2YCrCb)
     img_c1 = img_ycrcb[:, :, 0]
-    img_c2 = img_hsv[:, :, 1]
-    img_c3 = img_hsv[:, :, 2]
+    img_c2 = img_ycrcb[:, :, 1]
+    img_c3 = img_ycrcb[:, :, 2]
 
     features_hog_c1 = image_hog(img_c1, orient=orient, pix_per_cell=pix_per_cell, cell_per_block=cell_per_block,
                                 vis=False)
+
     features_hog_c2 = image_hog(img_c2, orient=orient, pix_per_cell=pix_per_cell, cell_per_block=cell_per_block,
                                 vis=False)
+
     features_hog_c3 = image_hog(img_c3, orient=orient, pix_per_cell=pix_per_cell, cell_per_block=cell_per_block,
                                 vis=False)
 
-    features_spatial_1 = image_bin_spatial(img_c1, size=spatial_size)
-    features_spatial_2 = image_bin_spatial(img_c2, size=spatial_size)
-    features_spatial_3 = image_bin_spatial(img_c3, size=spatial_size)
+    features_spatial = image_bin_spatial(img_ycrcb, size=spatial_size)
+    _, _, features_hist = color_hist(img_ycrcb, nbins=n_bins)
 
-    _, _, features_hist_1 = color_hist(img_c1, nbins=n_bins)
-    _, _, features_hist_2 = color_hist(img_c2, nbins=n_bins)
-    _, _, features_hist_3 = color_hist(img_c3, nbins=n_bins)
-
-    return np.concatenate((
+    return np.hstack((
+        features_spatial,
+        features_hist,
         features_hog_c1,
         features_hog_c2,
-        features_hog_c3,
-        features_spatial_1,
-        features_spatial_2,
-        features_spatial_3,
-        features_hist_1,
-        features_hist_2,
-        features_hist_3
+        features_hog_c3
     ))

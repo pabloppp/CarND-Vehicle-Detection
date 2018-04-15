@@ -6,24 +6,25 @@ import time
 
 from src.tools.hog_window_search import subsampling_window_search, draw_boxes, combined_window_search
 
-model = pickle.load(open("svc.p", "rb"))
+model = pickle.load(open("svc_2.p", "rb"))
 svc = model["svc"]
 X_scaler = model["scaler"]
 
 image = cv2.imread("../test_images/test1.jpg")
-image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
 t = time.time()
-rects_1, rects_2, rects_3, rects = combined_window_search(image, svc, X_scaler)
+rects_1, rects_2, rects_3, rects_4, rects_5, rects = combined_window_search(image, svc, X_scaler)
 elapsed = time.time() - t
 print("Search took {:1.3f}s".format(elapsed))
 
-image_rects = draw_boxes(image, rects_1, color=(255, 0, 0))
+image_rects = draw_boxes(cv2.cvtColor(image, cv2.COLOR_BGR2RGB), rects_1, color=(255, 0, 0))
 image_rects = draw_boxes(image_rects, rects_2, color=(0, 255, 0))
 image_rects = draw_boxes(image_rects, rects_3, color=(0, 0, 255))
+image_rects = draw_boxes(image_rects, rects_4, color=(255, 255, 0))
+image_rects = draw_boxes(image_rects, rects_5, color=(0, 255, 255))
 
 f, (ax1, ax2) = plt.subplots(1, 2, figsize=(8, 4))
-ax1.imshow(image)
+ax1.imshow(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
 ax1.set_title('Vehicle', fontsize=10)
 ax2.imshow(image_rects)
 ax2.set_title('Window search', fontsize=10)

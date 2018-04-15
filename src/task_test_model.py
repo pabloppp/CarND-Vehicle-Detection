@@ -4,14 +4,14 @@ import cv2
 
 from src.tools.prepare_data import combined_features
 
-model = pickle.load(open("svc.p", "rb"))
+model = pickle.load(open("svc_2.p", "rb"))
 svc = model["svc"]
 X_scaler = model["scaler"]
 
-image_car = cv2.imread("../test_images/test_car1.jpg")
+image_car = cv2.imread("../test_images/test_car3.jpg")
 image_car = cv2.cvtColor(image_car, cv2.COLOR_BGR2RGB)
 
-image_non_car = cv2.imread("../test_images/test_non_car1.jpg")
+image_non_car = cv2.imread("../test_images/test_non_car3.jpg")
 image_non_car = cv2.cvtColor(image_non_car, cv2.COLOR_BGR2RGB)
 
 features_car = combined_features(image_car)

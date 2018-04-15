@@ -2,7 +2,7 @@ import time
 import pickle
 import numpy as np
 from sklearn.preprocessing import StandardScaler
-from sklearn.svm import SVC
+from sklearn.svm import SVC, LinearSVC
 from sklearn.utils import shuffle
 
 from src.tools.prepare_data import load_images, combined_features
@@ -14,7 +14,7 @@ non_vehicles = load_images('../../data/non-vehicles/**/*.png')
 print("vehicles", len(vehicles_gti) + len(vehicles_kitti))
 print("non vehicles", len(non_vehicles))
 
-train_valid_split = 0.1
+train_valid_split = 0.2
 
 # Feature extraction
 features_vehicle_gti = []
@@ -34,27 +34,27 @@ elapsed = time.time() - t
 
 features_vehicle_gti = np.array(features_vehicle_gti)
 features_vehicle_kitti = np.array(features_vehicle_kitti)
+features_vehicle = np.concatenate((features_vehicle_kitti, features_vehicle_gti))
 features_non_vehicle = np.array(features_non_vehicle)
 
-train_size_vehicle = int((len(features_vehicle_gti) + len(features_vehicle_kitti)) * (1 - train_valid_split)) + 1
-valid_size_vehicle = int((len(features_vehicle_gti) + len(features_vehicle_kitti)) * train_valid_split)
+train_size_vehicle = int(len(features_vehicle) * (1 - train_valid_split))
+valid_size_vehicle = int(len(features_vehicle) * train_valid_split) + 1
 train_size_non_vehicle = int(len(features_non_vehicle) * (1 - train_valid_split))
-valid_size_non_vehicle = int(len(features_non_vehicle) * train_valid_split)
+valid_size_non_vehicle = int(len(features_non_vehicle) * train_valid_split) + 1
 
 print("Feature extraction time: {:1.3f}s per image (total: {:3.1f}s)".format(
-    elapsed / (len(features_vehicle_gti) + len(features_vehicle_kitti) + len(features_non_vehicle)), elapsed))
+    elapsed / (len(features_vehicle) + len(features_non_vehicle)), elapsed))
 
-# Trainig/Validation data setyp
+# Trainig/Validation data setup
 X_train = np.vstack((
-    features_vehicle_gti[valid_size_vehicle:],
-    features_vehicle_kitti,
+    features_vehicle[:train_size_vehicle],
     features_non_vehicle[:train_size_non_vehicle]
 )).astype(np.float64)
 y_train = np.array([1] * train_size_vehicle + [0] * train_size_non_vehicle)
 
 X_valid = np.vstack((
-    features_vehicle_gti[:valid_size_vehicle],
-    features_non_vehicle[train_size_non_vehicle:train_size_non_vehicle + valid_size_non_vehicle])
+    features_vehicle[train_size_vehicle:],
+    features_non_vehicle[train_size_non_vehicle:])
 ).astype(np.float64)
 y_valid = np.array([1] * valid_size_vehicle + [0] * valid_size_non_vehicle)
 
@@ -69,7 +69,7 @@ X_valid, y_valid = shuffle(X_valid, y_valid)
 print(X_train.shape, X_valid.shape)
 
 print("Training started")
-svc = SVC(kernel='linear', C=0.1, gamma='auto')
+svc = LinearSVC(C=0.6)  # SVC(kernel='rbf', C=10)
 t = time.time()
 svc.fit(X_train, y_train)
 elapsed = time.time() - t

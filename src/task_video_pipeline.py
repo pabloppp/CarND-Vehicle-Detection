@@ -7,7 +7,7 @@ model = pickle.load(open("svc_2.p", "rb"))
 svc = model["svc"]
 X_scaler = model["scaler"]
 
-clip = VideoFileClip("../test_video.mp4")  # .subclip(0, 3)
+clip = VideoFileClip("../project_video.mp4")  # .subclip(16, 18)
 videoProcessor = VideoProcessor(svc, X_scaler)
 
 heatmap = clip.fl_image(videoProcessor.heatmap)

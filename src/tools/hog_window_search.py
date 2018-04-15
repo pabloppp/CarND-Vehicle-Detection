@@ -14,22 +14,20 @@ def draw_boxes(img, bboxes, color=(0, 0, 255), thick=6):
 
 def subsampling_window_search(img, svc, X_scaler, y_start, y_stop, x_start, x_stop, scale=1.0,
                               orient=9, pix_per_cell=8, cell_per_block=2,
-                              spatial_size=(16, 16), n_bins=16, debug=False):
+                              spatial_size=(16, 16), n_bins=32, debug=False):
     rectangles = []
-    img = img.astype(np.float32)  # / 255
+    #img = img.astype(np.float32)  # / 255
 
     s_image = img[y_start:y_stop, x_start:x_stop, :]
-    ycrcb_s_image = cv2.cvtColor(s_image, cv2.COLOR_RGB2YCrCb)
-    hsv_s_image = cv2.cvtColor(s_image, cv2.COLOR_RGB2HSV)
+    ycrcb_s_image = cv2.cvtColor(s_image, cv2.COLOR_BGR2YCrCb)
 
     if scale != 1:
         imshape = ycrcb_s_image.shape
         ycrcb_s_image = cv2.resize(ycrcb_s_image, (np.int(imshape[1] / scale), np.int(imshape[0] / scale)))
-        hsv_s_image = cv2.resize(hsv_s_image, (np.int(imshape[1] / scale), np.int(imshape[0] / scale)))
 
     img_c1 = ycrcb_s_image[:, :, 0]
-    img_c2 = hsv_s_image[:, :, 1]
-    img_c3 = hsv_s_image[:, :, 2]
+    img_c2 = ycrcb_s_image[:, :, 1]
+    img_c3 = ycrcb_s_image[:, :, 2]
 
     # Define blocks and steps as above
     nx_blocks = (img_c1.shape[1] // pix_per_cell) - cell_per_block + 1
@@ -38,7 +36,7 @@ def subsampling_window_search(img, svc, X_scaler, y_start, y_stop, x_start, x_st
 
     window = 64
     nblocks_per_window = (window // pix_per_cell) - cell_per_block + 1
-    cells_per_step = 4  # Instead of overlap, define how many cells to step
+    cells_per_step = 2  # Instead of overlap, define how many cells to step
     nx_steps = (nx_blocks - nblocks_per_window) // cells_per_step + 1
     ny_steps = (ny_blocks - nblocks_per_window) // cells_per_step + 1
 
@@ -62,37 +60,24 @@ def subsampling_window_search(img, svc, X_scaler, y_start, y_stop, x_start, x_st
             features_hog_c3 = hog_c3[y_pos:y_pos + nblocks_per_window, x_pos:x_pos + nblocks_per_window].ravel()
 
             subimg_ycrcb = cv2.resize(ycrcb_s_image[y_top:y_top + window, x_left:x_left + window], (64, 64))
-            subimg_hsv = cv2.resize(hsv_s_image[y_top:y_top + window, x_left:x_left + window], (64, 64))
 
-            img_c1 = subimg_ycrcb[:, :, 0]
-            img_c2 = subimg_hsv[:, :, 1]
-            img_c3 = subimg_hsv[:, :, 2]
+            # cv2.imwrite('../output_images/test{}{}.jpg'.format(xb, yb), cv2.cvtColor(subimg_ycrcb, cv2.COLOR_YCrCb2BGR))
 
-            features_spatial_1 = image_bin_spatial(img_c1, size=spatial_size)
-            features_spatial_2 = image_bin_spatial(img_c2, size=spatial_size)
-            features_spatial_3 = image_bin_spatial(img_c3, size=spatial_size)
+            features_spatial = image_bin_spatial(subimg_ycrcb, size=spatial_size)
+            _, _, features_hist = color_hist(subimg_ycrcb, nbins=n_bins)
 
-            _, _, features_hist_1 = color_hist(img_c1, nbins=n_bins)
-            _, _, features_hist_2 = color_hist(img_c2, nbins=n_bins)
-            _, _, features_hist_3 = color_hist(img_c3, nbins=n_bins)
-
-            test_features = X_scaler.transform(np.hstack((
+            test_features = X_scaler.transform(np.concatenate((
+                features_spatial,
+                features_hist,
                 features_hog_c1,
                 features_hog_c2,
-                features_hog_c3,
-                features_spatial_1,
-                features_spatial_2,
-                features_spatial_3,
-                features_hist_1,
-                features_hist_2,
-                features_hist_3
+                features_hog_c3
             )).reshape(1, -1))
 
             test_prediction = svc.predict(test_features)
-            # print(x_left, y_top, test_prediction)
 
             if (test_prediction == 1) | debug:
-                # cv2.imwrite('../output_images/test{}{}.jpg'.format(xb, yb), cv2.cvtColor(subimg_hsv, cv2.COLOR_HSV2BGR))
+                # cv2.imwrite('../output_images/test{}{}.jpg'.format(xb, yb), cv2.cvtColor(subimg_ycrcb, cv2.COLOR_YCrCb2BGR))
                 x_box_left = np.int(x_left * scale)
                 y_top_draw = np.int(y_top * scale)
                 win_draw = np.int(window * scale)
@@ -104,28 +89,39 @@ def subsampling_window_search(img, svc, X_scaler, y_start, y_stop, x_start, x_st
 
 
 def combined_window_search(image, svc, X_scaler):
-    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     rects_1 = subsampling_window_search(image, svc, X_scaler,
-                                        y_start=392, y_stop=600,
-                                        x_start=128, x_stop=1158,
+                                        y_start=380, y_stop=460,
+                                        x_start=0, x_stop=1280,
                                         scale=1,
                                         debug=False)
 
     rects_2 = subsampling_window_search(image, svc, X_scaler,
-                                        y_start=392, y_stop=632,
-                                        x_start=32, x_stop=1232,
+                                        y_start=380, y_stop=550,
+                                        x_start=0, x_stop=1280,
                                         scale=1.5,
                                         debug=False)
 
     rects_3 = subsampling_window_search(image, svc, X_scaler,
-                                        y_start=392, y_stop=720,
+                                        y_start=380, y_stop=620,
                                         x_start=0, x_stop=1280,
                                         scale=2,
                                         debug=False)
 
-    rects = [rects_1, rects_2, rects_3]
+    rects_4 = subsampling_window_search(image, svc, X_scaler,
+                                        y_start=380, y_stop=660,
+                                        x_start=0, x_stop=1280,
+                                        scale=2.5,
+                                        debug=False)
 
-    return rects_1, rects_2, rects_3, [item for sublist in rects for item in sublist]
+    rects_5 = subsampling_window_search(image, svc, X_scaler,
+                                        y_start=380, y_stop=700,
+                                        x_start=0, x_stop=1280,
+                                        scale=4,
+                                        debug=False)
+
+    rects = [rects_1, rects_2, rects_3, rects_4, rects_5]
+
+    return rects_1, rects_2, rects_3, rects_4, rects_5, [item for sublist in rects for item in sublist]
 
 
 def generate_heatmap(rects, dims=(720, 1280)):
