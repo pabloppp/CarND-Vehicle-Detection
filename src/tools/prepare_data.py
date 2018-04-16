@@ -1,4 +1,5 @@
 import glob
+import pickle
 
 import cv2
 import numpy as np
@@ -11,6 +12,10 @@ def load_images(path):
         image = cv2.imread(image_path)
         images.append(image)
     return images
+
+
+def load_model():
+    return pickle.load(open("svc_linear_2.p", "rb"))
 
 
 def image_hog(img, orient, pix_per_cell, cell_per_block, vis=True, feature_vec=True):

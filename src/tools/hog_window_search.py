@@ -16,7 +16,7 @@ def subsampling_window_search(img, svc, X_scaler, y_start, y_stop, x_start, x_st
                               orient=9, pix_per_cell=8, cell_per_block=2,
                               spatial_size=(16, 16), n_bins=32, debug=False):
     rectangles = []
-    #img = img.astype(np.float32)  # / 255
+    # img = img.astype(np.float32)  # / 255
 
     s_image = img[y_start:y_stop, x_start:x_stop, :]
     ycrcb_s_image = cv2.cvtColor(s_image, cv2.COLOR_BGR2YCrCb)
@@ -99,7 +99,7 @@ def combined_window_search(image, svc, X_scaler):
                                         y_start=380, y_stop=550,
                                         x_start=0, x_stop=1280,
                                         scale=1.5,
-                                        debug=False)
+                                        debug=True)
 
     rects_3 = subsampling_window_search(image, svc, X_scaler,
                                         y_start=380, y_stop=620,

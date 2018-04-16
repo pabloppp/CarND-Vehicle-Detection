@@ -2,9 +2,9 @@ import pickle
 
 import cv2
 
-from src.tools.prepare_data import combined_features
+from src.tools.prepare_data import combined_features, load_model
 
-model = pickle.load(open("svc_2.p", "rb"))
+model = load_model()
 svc = model["svc"]
 X_scaler = model["scaler"]
 

@@ -5,12 +5,13 @@ import matplotlib.pyplot as plt
 import time
 
 from src.tools.hog_window_search import subsampling_window_search, draw_boxes, combined_window_search
+from src.tools.prepare_data import load_model
 
-model = pickle.load(open("svc_2.p", "rb"))
+model = load_model()
 svc = model["svc"]
 X_scaler = model["scaler"]
 
-image = cv2.imread("../test_images/test1.jpg")
+image = cv2.imread("../test_images/test3.jpg")
 
 t = time.time()
 rects_1, rects_2, rects_3, rects_4, rects_5, rects = combined_window_search(image, svc, X_scaler)

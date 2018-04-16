@@ -1,9 +1,10 @@
 import pickle
 from moviepy.editor import VideoFileClip, CompositeVideoClip
 
+from src.tools.prepare_data import load_model
 from src.tools.video_processor import VideoProcessor
 
-model = pickle.load(open("svc_2.p", "rb"))
+model = load_model()
 svc = model["svc"]
 X_scaler = model["scaler"]
 

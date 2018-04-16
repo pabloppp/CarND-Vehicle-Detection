@@ -8,8 +8,9 @@ from scipy.ndimage import label
 
 from src.tools.hog_window_search import subsampling_window_search, draw_boxes, combined_window_search, generate_heatmap, \
     draw_labeled_bboxes
+from src.tools.prepare_data import load_model
 
-model = pickle.load(open("svc_2.p", "rb"))
+model = load_model()
 svc = model["svc"]
 X_scaler = model["scaler"]
 

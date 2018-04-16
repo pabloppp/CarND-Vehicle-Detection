@@ -69,7 +69,7 @@ X_valid, y_valid = shuffle(X_valid, y_valid)
 print(X_train.shape, X_valid.shape)
 
 print("Training started")
-svc = LinearSVC(C=0.6)  # SVC(kernel='rbf', C=10)
+svc = LinearSVC(C=0.1)  # SVC(kernel='rbf', C=10)
 t = time.time()
 svc.fit(X_train, y_train)
 elapsed = time.time() - t
@@ -77,7 +77,7 @@ print("Training took {:2.3f}s".format(elapsed))
 
 # Persist trained classifier
 svc_model = {"svc": svc, "scaler": X_scaler}
-pickle.dump(svc_model, open("svc_2.p", "wb"))
+pickle.dump(svc_model, open("svc_linear_2.p", "wb"))
 
 print('Train Accuracy {:1.4f}'.format(svc.score(X_train, y_train)))
 print('Validation Accuracy {:1.4f}'.format(svc.score(X_valid, y_valid)))
