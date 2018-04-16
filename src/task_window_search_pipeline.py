@@ -14,13 +14,13 @@ model = load_model()
 svc = model["svc"]
 X_scaler = model["scaler"]
 
-image = cv2.imread("../test_images/test6.jpg")
+image = cv2.imread("../test_images/test1.jpg")
 
 t = time.time()
 rects_1, rects_2, rects_3, rects_4, rects_5, rects = combined_window_search(image, svc, X_scaler)
 
 heatmap = generate_heatmap(rects)
-heatmap[heatmap <= 10] = 0
+heatmap[heatmap <= 4] = 0
 
 labels = label(heatmap)
 

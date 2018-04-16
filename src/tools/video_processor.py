@@ -17,7 +17,7 @@ class VideoProcessor:
         rects_1, rects_2, rects_3, rects_4, rects_5, rects = combined_window_search(image, self.svc, self.scaler)
 
         heatmap = generate_heatmap(rects)
-        heatmap[heatmap <= 6] = 0
+        heatmap[heatmap <= 4] = 0
 
         # print(heatmap.shape)
         self.heatmap_history.append(heatmap)
@@ -30,11 +30,13 @@ class VideoProcessor:
         labeled_img = draw_labeled_bboxes(image, labels)
         return labeled_img
 
-    def heatmap_history_combined(self, window=8, required=6):
+    def heatmap_history_combined(self, window=10, required=6):
         # trim everyting except the last N values to avoid a memory overload
         self.heatmap_history = self.heatmap_history[-window:]
         combined = np.zeros(self.heatmap_history[0].shape)
         for heatmap in self.heatmap_history:
+            combined[heatmap == 0] -= 1
+            combined[combined < 0] = 0
             combined[heatmap > 0] += 1
         combined[combined <= required] = 0
         return combined

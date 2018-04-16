@@ -8,7 +8,7 @@ model = load_model()
 svc = model["svc"]
 X_scaler = model["scaler"]
 
-clip = VideoFileClip("../project_video.mp4")  # .subclip(16, 18)
+clip = VideoFileClip("../project_video.mp4")  # .subclip(25, 30)
 videoProcessor = VideoProcessor(svc, X_scaler)
 
 heatmap = clip.fl_image(videoProcessor.heatmap)

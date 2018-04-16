@@ -2,6 +2,7 @@ import cv2
 import numpy as np
 import time
 
+from src.tools.general_settings import feat_settings
 from src.tools.prepare_data import image_hog, image_bin_spatial, color_hist
 
 
@@ -13,8 +14,12 @@ def draw_boxes(img, bboxes, color=(0, 0, 255), thick=6):
 
 
 def subsampling_window_search(img, svc, X_scaler, y_start, y_stop, x_start, x_stop, scale=1.0,
-                              orient=9, pix_per_cell=8, cell_per_block=2,
-                              spatial_size=(16, 16), n_bins=32, debug=False):
+                              orient=feat_settings["orient"],
+                              pix_per_cell=feat_settings["pix_per_cell"],
+                              cell_per_block=feat_settings["cell_per_block"],
+                              spatial_size=feat_settings["spatial_size"],
+                              n_bins=feat_settings["n_bins"],
+                              debug=False):
     rectangles = []
     # img = img.astype(np.float32)  # / 255
 
@@ -64,11 +69,11 @@ def subsampling_window_search(img, svc, X_scaler, y_start, y_stop, x_start, x_st
             # cv2.imwrite('../output_images/test{}{}.jpg'.format(xb, yb), cv2.cvtColor(subimg_ycrcb, cv2.COLOR_YCrCb2BGR))
 
             features_spatial = image_bin_spatial(subimg_ycrcb, size=spatial_size)
-            _, _, features_hist = color_hist(subimg_ycrcb, nbins=n_bins)
+            _, features_hist = color_hist(subimg_ycrcb, nbins=n_bins)
 
             test_features = X_scaler.transform(np.concatenate((
                 features_spatial,
-                features_hist,
+                features_hist.ravel(),
                 features_hog_c1,
                 features_hog_c2,
                 features_hog_c3
@@ -90,16 +95,16 @@ def subsampling_window_search(img, svc, X_scaler, y_start, y_stop, x_start, x_st
 
 def combined_window_search(image, svc, X_scaler):
     rects_1 = subsampling_window_search(image, svc, X_scaler,
-                                        y_start=380, y_stop=460,
+                                        y_start=380, y_stop=480,
                                         x_start=0, x_stop=1280,
                                         scale=1,
                                         debug=False)
 
     rects_2 = subsampling_window_search(image, svc, X_scaler,
-                                        y_start=380, y_stop=550,
+                                        y_start=380, y_stop=560,
                                         x_start=0, x_stop=1280,
                                         scale=1.5,
-                                        debug=True)
+                                        debug=False)
 
     rects_3 = subsampling_window_search(image, svc, X_scaler,
                                         y_start=380, y_stop=620,
