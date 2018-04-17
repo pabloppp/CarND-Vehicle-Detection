@@ -173,7 +173,7 @@ That gives a total of 729 windows, and seems to work pretty well, here's an exam
 ![alt text][image16]
 
 #### 2. Heatmaps & threshold
-The code where generating this sample images can be found in [task window search heatmap](src/task_window_search_heatmap.py).
+The code for generating this sample images can be found in [task window search heatmap](src/task_window_search_heatmap.py).
 
 I used the combination of the detected windows to generate a heatmap, then added a threshold of 4 (only pixels where 4 or more windows intersect will be detected as cars).
 
@@ -181,7 +181,7 @@ This is what we get after this processing.
 ![alt text][image17]
 
 #### 3. Final pipeline (window search + heatmap + labels)
-The code where generating this sample images can be found in [task window search pipeline](src/task_window_search_pipeline.py).
+The code for generating this sample images can be found in [task window search pipeline](src/task_window_search_pipeline.py).
 
 I used the `label` method from the `scipy.ndimage` library to extract the attention blobs from the heatmap, and create bounding boxes for the detected cars.
 
@@ -198,20 +198,21 @@ The full 50s video took around 30 mins to be generated, at about 1.5 images per 
 Here's a [link to my video result](./output_video.mp4)
 
 I also tried the **rbf** model in a 5s sample of the video where the linear model has a hard time to detect the white car in the distance.
-The **rbf** model performs very good, find a very fitter bounding box around both cars and has 0 false positives (with a threshold of 0, so very few false positives are generated and get discarded in the video processing flow).
+The **rbf** model performs pretty good, it finds a very fitted bounding box around both cars and has 0 false positives (surprisingly with a threshold of 0, so the very few false positives tha are generated get discarded in the video processing flow).
 
 The big issue with this is that it took 30 mins to process the 5 second video!!! Trying to process the full 50s video would take 5 hours! So of course I didn't do it 😅
 Here's a [link to my video 5s result using rbf](./output_video_rbf.mp4)
 
 #### 2. Describe how (and identify where in your code) you implemented some kind of filter for false positives and some method for combining overlapping bounding boxes.
 
-In order to improve the result and remove as many false positives as possible, I created a [video processor](src/tools/video_processor.py) class that implements the full processing pipeline, and 10 heatmap images.
-I then only take the pixels from those 10 heatmap images where the last 6 consequent frames detect a car (so for example if a pixel detects a car for 6 frames it will be kept, but if it doesn't detect a car for a single frame after that it will be discarded and only be used again if if detects a car again for 6 frames in a row).
+In order to improve the result and remove as many false positives as possible, I created a [video processor](src/tools/video_processor.py) class that implements the full processing pipeline, and keeps the las 10 heatmap images.
+
+I then it only takes the pixels from those 10 heatmap images where the last 6 consequent frames detect a car (so for example if a pixel detects a car for 6 frames it will be kept, but if it doesn't detect a car in the next frame it will be discarded).
 
 I found that having a smaller window allowed the detection of cars where they are further away, but also generates a lot more of false positives.
-Making the window bigger reduced the number of false positives but cars far away were not detected, and also it introduced a lot of lag to the image (24fps so a 6 images window adds 0.25s lag)
+On the other hand, making the window bigger reduced the number of false positives but cars far away were not detected and bounding boxes are sometimes smaller that the car, and also it introduced a lot of lag to the image (24fps so a 6 images window adds 0.25s lag)
 
-I didn't manage to get rid of all the false positives on the left-side of the image, but the result is not bad. The false posirtives only remain in the image for a few milliseconds. As I trick, knowing that in the video we're diving in the left lane, could be to discard all the pixels with x < 500, but that would only work for this example.
+I didn't manage to get rid of all the false positives on the left-side of the image, but the result is not bad as false positives only remain in the image for a few milliseconds. As a trick to fix this, knowing that in the video we're diving in the left lane, we could discard all the pixels with x < 500, but of course that would only work for this example.
 
 Here's a gif of the final video result:
 
