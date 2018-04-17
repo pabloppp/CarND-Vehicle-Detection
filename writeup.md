@@ -113,18 +113,19 @@ The code where I train the model can be found in [task model train.py](src/task_
 First of all I loaded all the images, both vehicle and non-vehicle, and proceeded to the feature extraction. This process is slow (takes around 2.5 minutes).
 
 In order to separate train and validation splits, my first attempt was to use just shuffle the data and then take 20% of both vehicle and non-vehicle images for the validation.  
-After training my model the accuracy was pretty high, getting to almost 99% but actually the model was overfitting the data, because the images in the train and validation splits where too similar. When I tried to use this model in the video the performance was really bad, the model had learn to recognize only images from the dataset.
+After training my model the validation accuracy was pretty high, getting to almost 99% but actually the model was overfitting the data, because the images in the train and validation splits where too similar. When I tried to use this model in the video the performance was really bad, the model learned to recognize only images from the dataset.
 
-Because the vehicle images are generated based on time series, I decided to just pick the last 20% of them before shuffling, the accuracy of the model was reduced to around 94% but the performance of the model in the video was a lot better.
+Because the vehicle images are generated based on time series, I decided to just pick the last 20% of them before shuffling, the validation accuracy dropped to around 94% but the performance of the model in the video was a lot better.
 
 **Normalizing the data**
-To normalize the data I used a StandardScaler but just on the training split (to avoid iverfitting). I then used the same scaler when generating predictions
+
+To normalize the data I used a StandardScaler but just fitted it on the training split (to avoid overfitting the validation data). I then used the same scaler when generating predictions
 
 **Trainign the model**
 
 I trained a `LinearSVC` **with C=0.1** (I tried a regular SVC with likear kernel but the training and prediction times were much higher).
 
-After training, I saved the scaled and model to a pickle file called [svc linear.py](src/svc_linear.p) 
+After training, I saved the scaled and model to a pickle file called [svc linear.p](src/svc_linear.p) 
 
 Here's the output after training the model:
 ![alt text][image9]
@@ -135,22 +136,22 @@ The feature extraction time is very high, 10ms per image, for 729 windows it wou
 **Other models**
 
 I tried a lot of combination for parameters, the linear model above gave a pretty good balance of accuracy and prediction time.
-I also wanted to see how a model using **rbf** performed, so I trained one [svc lrbf.py](src/svc_rbf.p) I had to reduce some features so the training wouldn't take forever
+I also wanted to see how a model using **rbf** (C=10) performed, so I trained one [svc lrbf.p](src/svc_rbf.p) I had to reduce some features so the training wouldn't take forever
 
 ![alt text][image10]
 
-The accuracy goes up to 94.79% but the prediction time goes up to 17ms per image, with 729 windows that will take 12s per image (not including the feature extraction), so the full video could take about 4 hours to process, that's was out of the table... 
+The validation accuracy goes up to 94.79% but the prediction time goes up to 17ms per image, with 729 windows that will take 12s per image (not including the feature extraction), so the full video could take about 4 hours to process, that's was out of the table... 
 
 ### Sliding Window Search
 
-#### 1. Describe how (and identify where in your code) you implemented a sliding window search.  How did you decide what scales to search and how much to overlap windows?
+#### 1. Describe how (and identify where in your code) you implemented a sliding window search. How did you decide what scales to search and how much to overlap windows?
 The code where generate this samples can be found in [task window search](src/task_window_search.py).
 
 I used the same algorythm for optimized window search that we learnt in the classroom, you can see it here [hog window search.py](src/tools/hog_window_search.p)
 
 The main optimization is performing the HOG only once per window size.
 
-As you can see in the `combined_window_search` method from that file, I decided to do 5 passes with different window scales: x1, x1.5, x2, x2.5, and x4 (in order to find cars of all sizes in the image)
+As you can see in the `combined_window_search` method from that file, I decided to do 5 passes with different window scales: x1, x1.5, x2, x2.5, and x4 in order to find cars of all sizes in the image. Smaller scales are only applied to higher zones in the image, because that's where we expect the cars to look smaller.
 
 x1 (ymax-min: 380 -> 480)
 ![alt text][image11]
