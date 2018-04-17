@@ -31,5 +31,8 @@ ax2.imshow(image_rects)
 ax2.set_title('Window search', fontsize=10)
 plt.show()
 
-print("Windows: ", len(rects_1), len(rects_2), len(rects_3), len(rects_1) + len(rects_2) + len(rects_3))
+print("Windows: ",
+      len(rects_1), len(rects_2), len(rects_3),
+      len(rects_4), len(rects_5),
+      len(rects_1) + len(rects_2) + len(rects_3) + len(rects_4) + len(rects_5))
 # cv2.imwrite('../output_images/window_search_debug_combined.jpg', cv2.cvtColor(image_rects, cv2.COLOR_RGB2BGR))
